@@ -99,18 +99,32 @@ def parse_book_page(book_id):
 
     txt_url = urljoin(response.url, f'/txt.php?id={book_id}')
 
+    # comments = []
+    # comments_tag = soup.find_all('div', class_='texts')
+    # for comment_tag in comments_tag:
+    #     comment = comment_tag.find('span', class_='black').text
+    #     comments.append(comment)
+
     comments = []
-    comments_tag = soup.find_all('div', class_='texts')
-    for comment in comments_tag:
-        comment_tag = comment.find('span', class_='black').text
-        comments.append(comment_tag)
-    
+    comments_tag = soup.find_all('div', class_='texts')\
+                    .find_all('span', class_='black')
+    for comment_tag in comments_tag:
+        comments.append(comment_tag.text)
+
+    genres = []
+    genres_tag = soup.find('span', class_='d_book')\
+                    .find_all('a')
+    for genre_tag in genres_tag:
+        genres.append(genre_tag.text)
+
+
     return {
         'title': title,
         'author': author,
         'cover_url': cover_url,
         'txt_url': txt_url,
         'comments': comments,
+        'genres': genres,
     }
 
 
@@ -137,6 +151,7 @@ def main():
             logger.debug(book['cover_url'])
             logger.debug(book['txt_url'])
             logger.debug(book['comments'])
+            logger.debug(book['genres'])
             print()
 
             # book_title = f'{book_id}. {book['title']}'
