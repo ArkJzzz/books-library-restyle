@@ -75,28 +75,43 @@ def check_for_redirect(response):
         raise requests.HTTPError
 
 
-def get_book(id):
+def parse_book_page(book_id):
     url_base = 'https://tululu.org/'
-    url = urljoin(url_base, f'b{id}/')
+    url = urljoin(url_base, f'b{book_id}/')
+
     response = requests.get(url, verify=False)
     response.raise_for_status()
     check_for_redirect(response)
 
     soup = BeautifulSoup(response.text, 'lxml')
+
     title_tag = soup.find('body')\
                     .find('table')\
                     .find(class_='ow_px_td')\
                     .find('h1')
     title, author = title_tag.text.split('::')
+    title = title.strip()
+    author = author.strip()
 
     cover_tag = soup.find('div', class_='bookimage')\
                     .find('img')
-    cover_url = urljoin(url_base, cover_tag['src'])
+    cover_url = urljoin(response.url, cover_tag['src'])
+
+    txt_url = urljoin(response.url, f'/txt.php?id={book_id}')
+
+    comments = []
+    comments_tag = soup.find_all('div', class_='texts')
+    for comment in comments_tag:
+        comment_tag = comment.find('span', class_='black').text
+        comments.append(comment_tag)
     
-    return {'title': title.strip(),
-            'cover_url': urljoin(url_base, cover_tag['src']),
-            'txt_url': urljoin(url_base, f'/txt.php?id={id}'),
-        }
+    return {
+        'title': title,
+        'author': author,
+        'cover_url': cover_url,
+        'txt_url': txt_url,
+        'comments': comments,
+    }
 
 
 def main():
@@ -114,18 +129,19 @@ def main():
     urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
-
     for book_id in range(1, 11):
         try:
-            book = get_book(book_id)
+            book = parse_book_page(book_id)
 
             logger.debug(book['title'])
             logger.debug(book['cover_url'])
             logger.debug(book['txt_url'])
+            logger.debug(book['comments'])
+            print()
 
-            book_title = f'{book_id}. {book['title']}'
-            download_txt(book['txt_url'], book_title)
-            download_image(book['cover_url'])
+            # book_title = f'{book_id}. {book['title']}'
+            # download_txt(book['txt_url'], book_title)
+            # download_image(book['cover_url'])
 
         except requests.HTTPError:
             logger.error(f'HTTPError: Запрашиваемая страница не найдена')
