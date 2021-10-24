@@ -4,6 +4,8 @@ import logging
 import requests
 import urllib3
 import os
+import re
+import argparse
 from pathlib import Path
 from bs4 import BeautifulSoup
 from pathvalidate import sanitize_filename
@@ -25,8 +27,6 @@ def download_image(url, filename=False, folder='images/'):
         str: Путь до файла, куда сохранён текст.
     """
 
-    logger.debug(f'url: {url}')
-
     Path(folder).mkdir(parents=True, exist_ok=True)
 
     if not filename:
@@ -37,9 +37,10 @@ def download_image(url, filename=False, folder='images/'):
     response = requests.get(url, verify=False)
     response.raise_for_status()
     check_for_redirect(response)
+
     with open(filepath, 'wb') as file:
         file.write(response.content)
-    logger.info(f'Обложка скачана: {filepath} ')
+    logger.info(f'Обложка скачана: {filepath}')
 
     return filepath
 
@@ -54,18 +55,16 @@ def download_txt(url, filename, folder='books/'):
         str: Путь до файла, куда сохранён текст.
     """
 
-    logger.debug(f'url: {url}')
-
     Path(folder).mkdir(parents=True, exist_ok=True)
-    filename = sanitize_filename(filename)
-    filepath = os.path.join(folder, f'{filename}.txt')   
 
+    filename = sanitize_filename(filename)
+    filepath = os.path.join(folder, f'{filename}.txt')
     response = requests.get(url, verify=False)
     response.raise_for_status()
     check_for_redirect(response)
     with open(filepath, 'wb') as file:
         file.write(response.content)
-    logger.info(f'Книга скачана: {filepath} ')
+    logger.info(f'Книга скачана: {filepath}')
 
     return filepath
 
@@ -75,15 +74,18 @@ def check_for_redirect(response):
         raise requests.HTTPError
 
 
-def parse_book_page(book_id):
+def get_book_page(book_id):
     url_base = 'https://tululu.org/'
     url = urljoin(url_base, f'b{book_id}/')
+    content = requests.get(url, verify=False)
+    content.raise_for_status()
+    check_for_redirect(content)
 
-    response = requests.get(url, verify=False)
-    response.raise_for_status()
-    check_for_redirect(response)
+    return content   
 
-    soup = BeautifulSoup(response.text, 'lxml')
+
+def parse_book_page(content):
+    soup = BeautifulSoup(content.text, 'lxml')
 
     title_tag = soup.find('body')\
                     .find('table')\
@@ -95,28 +97,25 @@ def parse_book_page(book_id):
 
     cover_tag = soup.find('div', class_='bookimage')\
                     .find('img')
-    cover_url = urljoin(response.url, cover_tag['src'])
+    cover_url = urljoin(content.url, cover_tag['src'])
 
-    txt_url = urljoin(response.url, f'/txt.php?id={book_id}')
-
-    # comments = []
-    # comments_tag = soup.find_all('div', class_='texts')
-    # for comment_tag in comments_tag:
-    #     comment = comment_tag.find('span', class_='black').text
-    #     comments.append(comment)
+    txt_tag = soup.find(href=re.compile('txt'))
+    if txt_tag:
+        txt_url = urljoin(content.url, txt_tag['href'])
+    else:
+        txt_url = None
 
     comments = []
-    comments_tag = soup.find_all('div', class_='texts')\
-                    .find_all('span', class_='black')
+    comments_tag = soup.find_all('div', class_='texts')
     for comment_tag in comments_tag:
-        comments.append(comment_tag.text)
+        comment = comment_tag.find('span', class_='black').text
+        comments.append(comment)
 
     genres = []
     genres_tag = soup.find('span', class_='d_book')\
                     .find_all('a')
     for genre_tag in genres_tag:
         genres.append(genre_tag.text)
-
 
     return {
         'title': title,
@@ -142,24 +141,39 @@ def main():
 
     urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
+    parser = argparse.ArgumentParser(
+                description='Скрипт для скачивания книг с сайта tululu.ru'
+            )
+    parser.add_argument(
+            '--start_id',
+            default=1,
+            help='с какой книги начинать скачивать',
+            type=int,
+        )
+    parser.add_argument(
+            '--end_id', 
+            default=10,
+            help='по какую книгу скачивать',
+            type=int,
+        )
+    args = parser.parse_args()
 
-    for book_id in range(1, 11):
+    for book_id in range(args.start_id, args.end_id+1):
         try:
-            book = parse_book_page(book_id)
+            content = get_book_page(book_id)
+            book = parse_book_page(content)
 
+            logger.debug(f'book id: {book_id}')
             logger.debug(book['title'])
-            logger.debug(book['cover_url'])
-            logger.debug(book['txt_url'])
-            logger.debug(book['comments'])
-            logger.debug(book['genres'])
-            print()
 
-            # book_title = f'{book_id}. {book['title']}'
-            # download_txt(book['txt_url'], book_title)
-            # download_image(book['cover_url'])
+            book_title = f'{book_id}. {book["title"]}'
+            download_txt(book['txt_url'], book_title)
+            download_image(book['cover_url'])
 
         except requests.HTTPError:
-            logger.error(f'HTTPError: Запрашиваемая страница не найдена')
+            logger.error('HTTPError: Запрашиваемая страница не найдена')
+        except requests.exceptions.MissingSchema:
+            logger.error('Invalid URL: Ссылка не действительна')
 
 if __name__ == '__main__':
     main()
