@@ -160,10 +160,11 @@ def main():
 
     for book_id in range(args.start_id, args.end_id+1):
         try:
+            logger.debug(f'book id: {book_id}')
+
             content = get_book_page(book_id)
             book = parse_book_page(content)
 
-            logger.debug(f'book id: {book_id}')
             logger.debug(book['title'])
 
             book_title = f'{book_id}. {book["title"]}'
