@@ -17,7 +17,7 @@ from urllib.parse import unquote
 logger = logging.getLogger('tululu_parser')
 
 
-def download_image(url, filename=None, folder='images/'):
+def download_image(url, filename, folder='images/'):
     """Функция для скачивания текстовых файлов.
     
     Args:
@@ -32,10 +32,10 @@ def download_image(url, filename=None, folder='images/'):
 
     Path(folder).mkdir(parents=True, exist_ok=True)
 
-    if filename is None:
-        cover_path = unquote(urlsplit(url).path)
-        filename = cover_path.split('/')[-1]
-    filepath = os.path.join(folder, f'{filename}')
+    filename = sanitize_filename(filename)
+    cover_path = unquote(urlsplit(url).path)
+    extension = cover_path.split('.')[-1]
+    filepath = os.path.join(folder, f'{filename}.{extension}')
 
     response = requests.get(url, verify=False)
     response.raise_for_status()
@@ -64,11 +64,12 @@ def download_txt(url, filename, folder='books/'):
     Path(folder).mkdir(parents=True, exist_ok=True)
 
     filename = sanitize_filename(filename)
+    
     filepath = os.path.join(folder, f'{filename}.txt')
     response = requests.get(url, verify=False)
     response.raise_for_status()
     check_for_redirect(response)
-    with open(filepath, 'wb') as file:
+    with open(filepath, 'w') as file:
         file.write(response.text)
     logger.info(f'Книга скачана: {filepath}')
 
@@ -123,17 +124,11 @@ def parse_book_page(content):
     txt_tag = soup.find(href=re.compile('txt'))
     txt_url = urljoin(content.url, txt_tag['href']) if txt_tag else None
 
-    comments = []
     comments_tag = soup.find_all('div', class_='texts')
-    for comment_tag in comments_tag:
-        comment = comment_tag.find('span', class_='black').text
-        comments.append(comment)
+    comments = [tag.find('span', class_='black').text for tag in comments_tag]
 
-    genres = []
-    genres_tag = soup.find('span', class_='d_book')\
-                    .find_all('a')
-    for genre_tag in genres_tag:
-        genres.append(genre_tag.text)
+    genres_tag = soup.find('span', class_='d_book').find_all('a')
+    genres = [tag.text for tag in genres_tag]
 
     return {
         'title': title,
@@ -185,9 +180,9 @@ def main():
 
             logger.debug(book['title'])
 
-            book_title = f'{book_id}. {book["title"]}'
-            download_txt(book['txt_url'], book_title)
-            download_image(book['cover_url'])
+            filename = f'{book_id}. {book["title"]}'
+            download_txt(book['txt_url'], filename)
+            download_image(book['cover_url'], filename)
 
         except requests.HTTPError:
             logger.error('HTTPError: Запрашиваемая страница не найдена')
