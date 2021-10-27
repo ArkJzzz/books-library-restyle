@@ -19,12 +19,15 @@ logger = logging.getLogger('tululu_parser')
 
 def download_image(url, filename=False, folder='images/'):
     """Функция для скачивания текстовых файлов.
+    
     Args:
         url (str): Cсылка на изображение, которое хочется скачать.
         filename (str): Имя файла, с которым сохранять.
         folder (str): Папка, куда сохранять.
+    
     Returns:
         str: Путь до файла, куда сохранён текст.
+    
     """
 
     Path(folder).mkdir(parents=True, exist_ok=True)
@@ -47,12 +50,15 @@ def download_image(url, filename=False, folder='images/'):
 
 def download_txt(url, filename, folder='books/'):
     """Функция для скачивания текстовых файлов.
+    
     Args:
         url (str): Cсылка на текст, который хочется скачать.
         filename (str): Имя файла, с которым сохранять.
         folder (str): Папка, куда сохранять.
+    
     Returns:
         str: Путь до файла, куда сохранён текст.
+    
     """
 
     Path(folder).mkdir(parents=True, exist_ok=True)
@@ -70,11 +76,28 @@ def download_txt(url, filename, folder='books/'):
 
 
 def check_for_redirect(response):
+    """Функция для проверки перенаправления запроса
+
+    Поднимает исключение HTTPError, 
+    если ответ пришел не с запрашиваемой страницы.
+
+    """
+
     if response.history:
         raise requests.HTTPError
 
 
 def get_book_page(book_id):
+    """Функция запроса страницы книги с сайта https://tululu.org/
+
+    Args:
+        book_id (int): id книги на сайте https://tululu.org/
+
+    Returns:
+        Response object: ответ сервера на HTTP-запрос.
+
+    """
+
     url_base = 'https://tululu.org/'
     url = urljoin(url_base, f'b{book_id}/')
     content = requests.get(url, verify=False)
@@ -85,6 +108,8 @@ def get_book_page(book_id):
 
 
 def parse_book_page(content):
+    """Функция парсинга страницы с книгой."""
+    
     soup = BeautifulSoup(content.text, 'lxml')
 
     title_tag = soup.find('body')\
