@@ -69,7 +69,7 @@ def download_txt(url, filename, folder='books/'):
     response.raise_for_status()
     check_for_redirect(response)
     with open(filepath, 'wb') as file:
-        file.write(response.content)
+        file.write(response.text)
     logger.info(f'Книга скачана: {filepath}')
 
     return filepath
