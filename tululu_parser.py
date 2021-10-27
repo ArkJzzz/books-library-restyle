@@ -17,7 +17,7 @@ from urllib.parse import unquote
 logger = logging.getLogger('tululu_parser')
 
 
-def download_image(url, filename=False, folder='images/'):
+def download_image(url, filename=None, folder='images/'):
     """Функция для скачивания текстовых файлов.
     
     Args:
@@ -32,7 +32,7 @@ def download_image(url, filename=False, folder='images/'):
 
     Path(folder).mkdir(parents=True, exist_ok=True)
 
-    if not filename:
+    if filename is None:
         cover_path = unquote(urlsplit(url).path)
         filename = cover_path.split('/')[-1]
     filepath = os.path.join(folder, f'{filename}')
@@ -109,7 +109,7 @@ def get_book_page(book_id):
 
 def parse_book_page(content):
     """Функция парсинга страницы с книгой."""
-    
+
     soup = BeautifulSoup(content.text, 'lxml')
 
     title_tag = soup.find('body')\
