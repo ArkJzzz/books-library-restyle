@@ -112,23 +112,16 @@ def parse_book_page(content):
 
     soup = BeautifulSoup(content.text, 'lxml')
 
-    title_tag = soup.find('body')\
-                    .find('table')\
-                    .find(class_='ow_px_td')\
-                    .find('h1')
+    title_tag = soup.find('h1')
     title, author = title_tag.text.split('::')
     title = title.strip()
     author = author.strip()
 
-    cover_tag = soup.find('div', class_='bookimage')\
-                    .find('img')
+    cover_tag = soup.find('div', class_='bookimage').find('img')
     cover_url = urljoin(content.url, cover_tag['src'])
 
     txt_tag = soup.find(href=re.compile('txt'))
-    if txt_tag:
-        txt_url = urljoin(content.url, txt_tag['href'])
-    else:
-        txt_url = None
+    txt_url = urljoin(content.url, txt_tag['href']) if txt_tag else None
 
     comments = []
     comments_tag = soup.find_all('div', class_='texts')
