@@ -19,28 +19,27 @@ logger = logging.getLogger('tululu_parser')
 
 def download_image(url, filename, folder='images/'):
     """Функция для скачивания текстовых файлов.
-    
+
     Args:
         url (str): Cсылка на изображение, которое хочется скачать.
         filename (str): Имя файла, с которым сохранять.
         folder (str): Папка, куда сохранять.
-    
+
     Returns:
         str: Путь до файла, куда сохранён текст.
-    
+
     """
 
     Path(folder).mkdir(parents=True, exist_ok=True)
-
-    filename = sanitize_filename(filename)
-    cover_path = unquote(urlsplit(url).path)
-    extension = cover_path.split('.')[-1]
-    filepath = os.path.join(folder, f'{filename}.{extension}')
 
     response = requests.get(url, verify=False)
     response.raise_for_status()
     check_for_redirect(response)
 
+    filename = sanitize_filename(filename)
+    cover_path = unquote(urlsplit(url).path)
+    extension = cover_path.split('.')[-1]
+    filepath = os.path.join(folder, f'{filename}.{extension}')
     with open(filepath, 'wb') as file:
         file.write(response.content)
     logger.info(f'Обложка скачана: {filepath}')
@@ -50,25 +49,25 @@ def download_image(url, filename, folder='images/'):
 
 def download_txt(url, filename, folder='books/'):
     """Функция для скачивания текстовых файлов.
-    
+
     Args:
         url (str): Cсылка на текст, который хочется скачать.
         filename (str): Имя файла, с которым сохранять.
         folder (str): Папка, куда сохранять.
-    
+
     Returns:
         str: Путь до файла, куда сохранён текст.
-    
+
     """
 
     Path(folder).mkdir(parents=True, exist_ok=True)
 
-    filename = sanitize_filename(filename)
-    
-    filepath = os.path.join(folder, f'{filename}.txt')
     response = requests.get(url, verify=False)
     response.raise_for_status()
     check_for_redirect(response)
+
+    filename = sanitize_filename(filename)
+    filepath = os.path.join(folder, f'{filename}.txt')
     with open(filepath, 'w') as file:
         file.write(response.text)
     logger.info(f'Книга скачана: {filepath}')
@@ -79,7 +78,7 @@ def download_txt(url, filename, folder='books/'):
 def check_for_redirect(response):
     """Функция для проверки перенаправления запроса
 
-    Поднимает исключение HTTPError, 
+    Поднимает исключение HTTPError,
     если ответ пришел не с запрашиваемой страницы.
 
     """
@@ -101,17 +100,17 @@ def get_book_page(book_id):
 
     url_base = 'https://tululu.org/'
     url = urljoin(url_base, f'b{book_id}/')
-    content = requests.get(url, verify=False)
-    content.raise_for_status()
-    check_for_redirect(content)
+    response = requests.get(url, verify=False)
+    response.raise_for_status()
+    check_for_redirect(response)
 
-    return content   
+    return response
 
 
-def parse_book_page(content):
+def parse_book_page(response):
     """Функция парсинга страницы с книгой."""
 
-    soup = BeautifulSoup(content.text, 'lxml')
+    soup = BeautifulSoup(response.text, 'lxml')
 
     title_tag = soup.find('h1')
     title, author = title_tag.text.split('::')
@@ -119,16 +118,18 @@ def parse_book_page(content):
     author = author.strip()
 
     cover_tag = soup.find('div', class_='bookimage').find('img')
-    cover_url = urljoin(content.url, cover_tag['src'])
+    cover_url = urljoin(response.url, cover_tag['src'])
 
     txt_tag = soup.find(href=re.compile('txt'))
-    txt_url = urljoin(content.url, txt_tag['href']) if txt_tag else None
+    txt_url = urljoin(response.url, txt_tag['href']) if txt_tag else None
 
     comments_tag = soup.find_all('div', class_='texts')
     comments = [tag.find('span', class_='black').text for tag in comments_tag]
 
     genres_tag = soup.find('span', class_='d_book').find_all('a')
     genres = [tag.text for tag in genres_tag]
+
+    logger.info(f'Получена информация о книге {title}')
 
     return {
         'title': title,
@@ -142,10 +143,10 @@ def parse_book_page(content):
 
 def main():
     formatter = logging.Formatter(
-            fmt='%(asctime)s %(name)s:%(lineno)d - %(message)s',
-            datefmt='%Y-%b-%d %H:%M:%S (%Z)',
-            style='%',
-        )
+        fmt='%(asctime)s %(name)s:%(lineno)d - %(message)s',
+        datefmt='%Y-%b-%d %H:%M:%S (%Z)',
+        style='%',
+    )
     console_handler = logging.StreamHandler()
     console_handler.setFormatter(formatter)
     console_handler.setLevel(logging.DEBUG)
@@ -154,32 +155,18 @@ def main():
 
     urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-    parser = argparse.ArgumentParser(
-                description='Скрипт для скачивания книг с сайта tululu.ru'
-            )
-    parser.add_argument(
-            '--start_id',
-            default=1,
-            help='с какой книги начинать скачивать',
-            type=int,
-        )
-    parser.add_argument(
-            '--end_id', 
-            default=10,
-            help='по какую книгу скачивать',
-            type=int,
-        )
+    description = 'Скрипт для скачивания книг с сайта tululu.ru'
+    parser = argparse.ArgumentParser(description=description)
+    parser.add_argument('--start_id', default=1, type=int,
+                        help='с какой книги начинать скачивать')
+    parser.add_argument('--end_id', default=10, type=int,
+                        help='по какую книгу скачивать')
     args = parser.parse_args()
 
-    for book_id in range(args.start_id, args.end_id+1):
+    for book_id in range(args.start_id, args.end_id + 1):
         try:
-            logger.debug(f'book id: {book_id}')
-
-            content = get_book_page(book_id)
-            book = parse_book_page(content)
-
-            logger.debug(book['title'])
-
+            response = get_book_page(book_id)
+            book = parse_book_page(response)
             filename = f'{book_id}. {book["title"]}'
             download_txt(book['txt_url'], filename)
             download_image(book['cover_url'], filename)
@@ -188,6 +175,7 @@ def main():
             logger.error('HTTPError: Запрашиваемая страница не найдена')
         except requests.exceptions.MissingSchema:
             logger.error('Invalid URL: Ссылка не действительна')
+
 
 if __name__ == '__main__':
     main()
