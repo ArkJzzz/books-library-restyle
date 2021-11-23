@@ -195,7 +195,7 @@ def create_parser():
                         help='с какой страницы начинать скачивать')
     parser.add_argument('--end_page', type=int,
                         help='по какую страницу скачивать')
-    parser.add_argument('--dest_folder', default=Path.cwd(),
+    parser.add_argument('--dest_folder', default='.',
                         help='путь к каталогу с результатами парсинга')
     parser.add_argument('--json_path', default='books_description.json',
                         help='указать свой путь к *.json файлу с результатами')
@@ -224,9 +224,9 @@ def main():
     parser = create_parser()
     args = parser.parse_args()
 
-    books_folder = Path.cwd() / Path(args.dest_folder) / 'books'
-    imgages_folder = Path.cwd() / Path(args.dest_folder) / 'images'
-    json_path = Path.cwd() / Path(args.dest_folder) / args.json_path
+    books_folder = Path(args.dest_folder) / 'books'
+    imgages_folder = Path(args.dest_folder) / 'images'
+    json_path = Path(args.dest_folder) / args.json_path
     books_descriptions = []
     books_urls = get_genre_books_urls(args.start_page, args.end_page)
 
