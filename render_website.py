@@ -7,6 +7,7 @@ from pathlib import Path
 # from http.server import HTTPServer, SimpleHTTPRequestHandler
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from livereload import Server
+from more_itertools import chunked
 
 
 logger = logging.getLogger('main')
@@ -21,6 +22,7 @@ def on_reload():
         books_description_json = my_file.read()
 
     books = json.loads(books_description_json)
+    books_by_columns = list(chunked(books, 2))
 
     env = Environment(
         loader=FileSystemLoader('.'),
@@ -29,7 +31,7 @@ def on_reload():
     template = env.get_template('template.html')
 
     rendered_page = template.render(
-        books=books,
+        books_by_columns=books_by_columns
     )
     with open('index.html', 'w', encoding="utf8") as file:
         file.write(rendered_page)
