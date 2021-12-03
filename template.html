@@ -12,6 +12,12 @@
   </head>
   <body>
       <div class="container">
+        <a href="/index{{page_num-1}}.html">Предыдущая</a>
+        <a href="/index{{page_num+1}}.html">Следующая</a>
+
+      </div>
+      
+      <div class="container">
         {% for row in books_by_columns %}
           <div class="row">
             {% for book in row %}
