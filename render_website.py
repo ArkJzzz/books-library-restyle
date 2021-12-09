@@ -11,6 +11,7 @@ from more_itertools import chunked
 
 logger = logging.getLogger('main')
 
+
 BASE_DIR = Path.cwd()
 MEDIA_ROOT = Path() / BASE_DIR / 'media'
 
@@ -27,15 +28,18 @@ def on_reload():
         books = json.loads(my_file.read())
 
     books_by_page = list(chunked(books, 10))
+    num_pages = len(books_by_page)
 
-    for page_num, books_on_page in enumerate(books_by_page, 1):
+    for current_page, books_on_page in enumerate(books_by_page, 1):
+        filename = f'pages/index{current_page}.html'
         books_by_columns = list(chunked(books_on_page, 2))
 
         rendered_page = template.render(
             books_by_columns=books_by_columns,
-            page_num=page_num,
+            current_page=current_page,
+            num_pages=num_pages,
         )
-        with open(f'pages/index{page_num}.html', 'w', encoding="utf8") as file:
+        with open(filename, 'w', encoding="utf8") as file:
             file.write(rendered_page)
 
 
@@ -55,7 +59,7 @@ def main():
 
     server = Server()
     server.watch('template.html', on_reload)
-    server.serve(root='pages', default_filename='index1.html')
+    server.serve(root='.', default_filename='pages/index1.html')
 
 
 if __name__ == '__main__':
