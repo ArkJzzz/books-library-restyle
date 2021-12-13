@@ -14,6 +14,8 @@ logger = logging.getLogger('main')
 
 BASE_DIR = Path.cwd()
 MEDIA_ROOT = Path() / BASE_DIR / 'media'
+BOOKS_FILE = 'books_description.json'
+TEMPLATE = 'template.html'
 
 
 def on_reload():
@@ -22,8 +24,8 @@ def on_reload():
         loader=FileSystemLoader('.'),
         autoescape=select_autoescape(['html', 'xml']),
     )
-    template = env.get_template('template.html')
-    books_file = os.path.join(MEDIA_ROOT, 'books_description.json')
+    template = env.get_template(TEMPLATE)
+    books_file = os.path.join(MEDIA_ROOT, BOOKS_FILE)
     with open(books_file, 'r') as my_file:
         books = json.loads(my_file.read())
 
