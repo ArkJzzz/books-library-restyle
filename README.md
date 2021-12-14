@@ -1,11 +1,15 @@
-# tululu parser
+# Books Library Restyle
 
-Скрипты для скачивания книг с сайта онлайн-библиотеки [tululu.org](https://tululu.org/)
+Проект по обновлению онлайн-библиотеки, состоящий из двух частей: 
 
-Представлены два скрипта:
+1. [Парсеры](#Parcers), с помощью которых можно скачать книги с сайта онлайн-библиотеки [tululu.org](https://tululu.org/): 
 
-* `tululu_parser.py` - используется для скачивания отдельных книг
-* `parse_tululu_category.py` - используется для качивания книг жанра "Научная фантастика"
+    - [`tululu_parser.py`](#tululu_parser) - используется для скачивания отдельных книг
+    - [`parse_tululu_category.py`](#parse_tululu_category) - используется для качивания книг жанра "Научная фантастика"
+
+2. [Сайт-библиотека](#Site), который представляет собой интерфейс для скачанных парсерами книг: можно выбрать книгу и сразу начать ее читать.
+
+    Псмотреть как выглядит сайт и потыкать ссылочки можно на демонстрационной странице [Books Library Restyle](https://arkjzzz.github.io/books-library-restyle/pages/index1.html)
 
 ## Что используется
 
@@ -13,7 +17,9 @@
 - [BeautifulSoup4](https://beautiful-soup-4.readthedocs.io/)
 - [Библиотека pathvalidate](https://github.com/thombashi/pathvalidate)
 - [Библиотека argparse](https://docs.python.org/3.6/howto/argparse.html)
-
+- [Библиотека Bootstrap](https://getbootstrap.com/)
+- [Шаблонизатор Jinja2](https://jinja2docs.readthedocs.io/en/stable/)
+- [LiveReload](https://github.com/lepture/python-livereload)
 
 ## Установка
 
@@ -29,7 +35,9 @@ pip3 install -r requirements.txt
 
 ## Как пользоваться
 
-### tululu_parser.py
+### <a name="Parcers"></a> Парсеры 
+
+#### <a name="tululu_parser"></a> tululu_parser.py
 
 - **Скачивание первых 10 книг из онлайн-библиотеки**
 ```sh
@@ -81,7 +89,7 @@ book id: 37
 HTTPError: Запрашиваемая страница не найдена
 ```
 
-### parse_tululu_category.py
+#### <a name="parse_tululu_category"></a> parse_tululu_category.py
 
 - **Скачивание всех доступных книг:**
 ```sh
@@ -294,3 +302,36 @@ $ python3 parse_tululu_category.py --skip_txt
  Обложка скачана: /home/user/images/01b94 Феномен фантастики.jpg
  Описания книг сохранены в файле /home/user/books_descriptions.json
 ```
+
+
+### <a name="Site"></a> Сайт онлайн-библиотеки
+
+- **Запуск оффлайн версии сайта у себя на компьютере:**
+
+```sh
+python render_website.py
+```
+
+Вывод:
+
+```sh
+python render_website.py 
+[I 211214 22:45:30 server:335] Serving on http://127.0.0.1:5500
+[I 211214 22:45:30 handlers:62] Start watching changes
+[I 211214 22:45:30 handlers:64] Start detecting changes
+[I 211214 22:45:32 handlers:135] Browser Connected: http://127.0.0.1:5500/
+```
+
+После этого переходите по ссылке [http://127.0.0.1:5500](http://127.0.0.1:5500), вы увидите главную страницу:
+
+![Здесь должна быть гифка с интерфейсом сайта](screenshots/site.gif)
+
+
+- **Так же Вы можете опубликовать сайт на [GitHub Pages](https://pages.github.com)**
+
+Как это сделать, можно почитать в статье [Как создать бесплатный сайт на GitHub Pages](https://medium.com/nuances-of-programming/%D0%BA%D0%B0%D0%BA-%D1%81%D0%BE%D0%B7%D0%B4%D0%B0%D1%82%D1%8C-%D0%B1%D0%B5%D1%81%D0%BF%D0%BB%D0%B0%D1%82%D0%BD%D1%8B%D0%B9-%D1%81%D0%B0%D0%B9%D1%82-%D0%BD%D0%B0-github-pages-e0f3c258ee22)
+
+
+## Цели проекта
+
+Код написан в учебных целях — это урок в курсе по Python и веб-разработке на сайте [Devman](https://dvmn.org).

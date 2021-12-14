@@ -18,46 +18,46 @@
     <meta name="msapplication-TileColor" content="#da532c">
     <meta name="msapplication-config" content="./../static/browserconfig.xml">
     <meta name="theme-color" content="#ffffff">
+    <!-- Автор иконок: https://www.flaticon.com/ru/authors/lutfix -->
 
-    <title>Онлайн-библиотека</title>
+    <title>Books Library Restyle</title>
   </head>
 
   <body>      
     <div class="container">
-
-        <nav aria-label="Page navigation">
-          <ul class="pagination">
-            {% if current_page == 1 %}
-              <li class="page-item disabled">
-                <span class="page-link">Предыдущая</span>
-              </li>
-            {% else %}            
+      <nav aria-label="Page navigation">
+        <ul class="pagination">
+          {% if current_page == 1 %}
+            <li class="page-item disabled">
+              <span class="page-link">Предыдущая</span>
+            </li>
+          {% else %}            
+            <li class="page-item">
+              <a class="page-link" href="./../pages/index{{current_page - 1}}.html">Предыдущая</a>
+            </li>
+          {% endif %}
+          {% for page_num in range(1, num_pages + 1) %}
+            {% if current_page == page_num %}
+              <li class="page-item active" aria-current="page">
+                <span class="page-link">{{current_page}}</span>
+              </li> 
+            {% else %}
               <li class="page-item">
-                <a class="page-link" href="./../pages/index{{current_page - 1}}.html">Предыдущая</a>
+                <a class="page-link" href="./../pages/index{{page_num}}.html">{{page_num}}</a>
               </li>
             {% endif %}
-            {% for page_num in range(1, num_pages + 1) %}
-              {% if current_page == page_num %}
-                <li class="page-item active" aria-current="page">
-                  <span class="page-link">{{current_page}}</span>
-                </li> 
-              {% else %}
-                <li class="page-item">
-                  <a class="page-link" href="./../pages/index{{page_num}}.html">{{page_num}}</a>
-                </li>
-              {% endif %}
-            {% endfor %}
-            {% if current_page == num_pages %}
-              <li class="page-item disabled">
-                <span class="page-link">Следующая</span>
-              </li>
-            {% else %}            
-              <li class="page-item">
-                <a class="page-link" href="./../pages/index{{current_page + 1}}.html">Следующая</a>
-              </li>
-            {% endif %}
-          </ul>
-        </nav>
+          {% endfor %}
+          {% if current_page == num_pages %}
+            <li class="page-item disabled">
+              <span class="page-link">Следующая</span>
+            </li>
+          {% else %}            
+            <li class="page-item">
+              <a class="page-link" href="./../pages/index{{current_page + 1}}.html">Следующая</a>
+            </li>
+          {% endif %}
+        </ul>
+      </nav>
 
       {% for row in books_by_columns %}
         <div class="row">
