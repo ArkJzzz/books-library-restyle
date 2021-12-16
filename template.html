@@ -23,10 +23,10 @@
     <title>Books Library Restyle</title>
   </head>
 
-  <body>      
+  <body>
     <div class="container">
       <nav aria-label="Page navigation">
-        <ul class="pagination">
+        <ul class="pagination justify-content-center mt-3">
           {% if current_page == 1 %}
             <li class="page-item disabled">
               <span class="page-link">Предыдущая</span>
@@ -58,7 +58,7 @@
           {% endif %}
         </ul>
       </nav>
-
+      <hr>
       {% for row in books_by_columns %}
         <div class="row">
           {% for book in row %}
@@ -90,6 +90,7 @@
           {% endfor %}
         </div>
       {% endfor %}
+      <hr>
     </div>
 
     <script src="./../static/popper.min.js" crossorigin="anonymous"></script>
