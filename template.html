@@ -25,6 +25,7 @@
 
   <body>
     <div class="container">
+      {% block pagination %}
       <nav aria-label="Page navigation">
         <ul class="pagination justify-content-center mt-3">
           {% if current_page == 1 %}
@@ -58,6 +59,7 @@
           {% endif %}
         </ul>
       </nav>
+      {% endblock %}
       <hr>
       {% for row in books_by_columns %}
         <div class="row">
@@ -91,6 +93,7 @@
         </div>
       {% endfor %}
       <hr>
+      {{ self.pagination() }}
     </div>
 
     <script src="./../static/popper.min.js" crossorigin="anonymous"></script>
